@@ -1,29 +1,17 @@
 {
-  "name": "prod_level",
+  "name": "youtube_ai",
   "version": "1.0.0",
   "description": "Folder structure for the production level",
   "main": "index.js",
   "type": "module",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon index.js",
-    "watch": "node --watch index.js",
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --detectOpenHandles --forceExit",
-    "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watchAll",
-    "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
-    "seed": "npx sequelize-cli db:seed:all",
-    "migrate": "npx sequelize-cli db:migrate",
-    "migrate:undo": "npx sequelize-cli db:migrate:undo",
-    "db:create": "npx sequelize-cli db:create",
-    "db:drop": "npx sequelize-cli db:drop",
-    "lint": "eslint . --ext .js",
-    "lint:fix": "eslint . --ext .js --fix",
-    "clean": "rm -rf logs/* uploads/* coverage"
+    "dev": "nodemon index.js"
   },
   "author": "Apurv Gupta",
   "license": "ISC",
   "dependencies": {
-    "bcryptjs": "^3.0.2",
+    "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
     "express": "^4.21.2",
