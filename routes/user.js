@@ -1,10 +1,16 @@
 import express from "express";
 const router = express.Router();
 
-import { loginUser, signupUser } from "../controllers/userController.js";
-import { authenticate } from "../middlewares/auth.js";
+import {
+  loginUser,
+  signupUser,
+  convertYoutubeUrlToCourse,
+} from "../controllers/userController.js";
 
 router.post("/login", loginUser);
 router.post("/signup", signupUser);
+router.post("/convert", convertYoutubeUrlToCourse);
+
+// router.use(authenticate);
 
 export default router;

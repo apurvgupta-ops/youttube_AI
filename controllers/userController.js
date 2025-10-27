@@ -11,6 +11,13 @@ import { User } from "../models/index.js";
 import { Op } from "sequelize";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import OpenAI from "openai";
+import axios from "axios";
+import { YoutubeTranscript } from "youtube-transcript-plus";
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 export const loginUser = asyncHandler(async (req, res) => {
   try {
@@ -86,5 +93,103 @@ export const signupUser = asyncHandler(async (req, res) => {
   } catch (error) {
     logger.error("Error signing up user:", error);
     return sendServerErrorResponse(res, "Failed to sign up user");
+  }
+});
+
+export const convertYoutubeUrlToCourse = asyncHandler(async (req, res) => {
+  try {
+    const { youtubeUrl } = req.body;
+    if (!youtubeUrl) {
+      return sendBadRequestResponse(res, "YouTube URL is required");
+    }
+
+    const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/;
+    if (!youtubeRegex.test(youtubeUrl)) {
+      return sendBadRequestResponse(res, "Invalid YouTube URL");
+    }
+
+    // Extract video ID safely
+    let videoId = null;
+    try {
+      const urlObj = new URL(youtubeUrl);
+      videoId = urlObj.searchParams.get("v");
+      if (!videoId && urlObj.hostname === "youtu.be") {
+        videoId = urlObj.pathname.slice(1);
+      }
+    } catch {
+      return sendBadRequestResponse(res, "Invalid YouTube URL format");
+    }
+
+    if (!videoId) {
+      return sendBadRequestResponse(res, "Could not extract video ID");
+    }
+
+    let transcriptText = "";
+    try {
+      const transcript = await YoutubeTranscript.fetchTranscript(videoId, {
+        lang: "en",
+        userAgent:
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0 Safari/537.36",
+      });
+
+      if (transcript && transcript.length > 0) {
+        transcriptText = transcript.map((item) => item.text).join(" ");
+      } else {
+        logger.warn("Transcript available but returned empty text");
+      }
+    } catch (err) {
+      logger.warn("Transcript fetch failed:", err.message);
+    }
+    let combinedText = transcriptText;
+
+    if (!combinedText || combinedText.trim().length < 100) {
+      logger.info(
+        "Transcript is missing or too short — fetching context from Tavily..."
+      );
+    }
+
+    if (!combinedText.trim()) {
+      return sendBadRequestResponse(
+        res,
+        "No textual content found. Please ensure the video has captions or provide transcript manually."
+      );
+    }
+
+    // Step 3: Generate structured course content using GPT-4 with JSON response format
+    const systemPrompt = `
+You are an expert course content creator. Given the following text (from a YouTube transcript and related data),
+create a structured course with title, description, slug, 5 tags, and course_content in markdown format (~1000 words, 5 sections).
+
+Output strictly as JSON:
+{
+  "title": "string",
+  "slug": "string",
+  "description": "string",
+  "tags": ["string", "string", "string", "string", "string"],
+  "course_content": "string (markdown, ~1000 words or 5 paragraphs)"
+}
+`;
+
+    const youtubeData = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: combinedText },
+      ],
+    });
+
+    const courseData = JSON.parse(youtubeData.choices[0].message.content);
+
+    return sendCreatedResponse(
+      res,
+      "Course created successfully from YouTube video",
+      courseData
+    );
+  } catch (error) {
+    logger.error("Error converting YouTube URL to course:", error);
+    return sendServerErrorResponse(
+      res,
+      "Failed to convert YouTube URL to course"
+    );
   }
 });

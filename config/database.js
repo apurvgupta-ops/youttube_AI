@@ -16,7 +16,11 @@ const createConnection = () => {
     host: process.env.DB_HOST || "localhost",
     port: process.env.DB_PORT || 3306,
     dialect: process.env.DB_DIALECT || "mysql",
-    // logging: process.env.NODE_ENV === 'development' ? (msg) => logger.debug(msg) : false,
+    // logging:
+    //   process.env.NODE_ENV === "development"
+    //     ? (msg) => logger.debug(msg)
+    //     : false,
+    logging: false,
     pool: {
       max: parseInt(process.env.DB_POOL_MAX) || 10,
       min: parseInt(process.env.DB_POOL_MIN) || 0,
