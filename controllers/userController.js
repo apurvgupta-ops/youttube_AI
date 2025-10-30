@@ -8,11 +8,9 @@ import {
 import { asyncHandler } from "../utils/apiHelpers.js";
 import logger from "../utils/logger.js";
 import { User } from "../models/index.js";
-import { Op } from "sequelize";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import OpenAI from "openai";
-import axios from "axios";
 import { YoutubeTranscript } from "youtube-transcript-plus";
 
 const openai = new OpenAI({
@@ -127,7 +125,6 @@ export const convertYoutubeUrlToCourse = asyncHandler(async (req, res) => {
     let transcriptText = "";
     try {
       const transcript = await YoutubeTranscript.fetchTranscript(videoId, {
-        lang: "en",
         userAgent:
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0 Safari/537.36",
       });
@@ -142,7 +139,7 @@ export const convertYoutubeUrlToCourse = asyncHandler(async (req, res) => {
     }
     let combinedText = transcriptText;
 
-    if (!combinedText || combinedText.trim().length < 100) {
+    if (!combinedText) {
       logger.info(
         "Transcript is missing or too short — fetching context from Tavily..."
       );
@@ -158,7 +155,7 @@ export const convertYoutubeUrlToCourse = asyncHandler(async (req, res) => {
     // Step 3: Generate structured course content using GPT-4 with JSON response format
     const systemPrompt = `
 You are an expert course content creator. Given the following text (from a YouTube transcript and related data),
-create a structured course with title, description, slug, 5 tags, and course_content in markdown format (~1000 words, 5 sections).
+create a structured course with title, description, slug, 5 tags, and course_content in markdown format (~2000 words, 5 sections).
 
 Output strictly as JSON:
 {
@@ -176,6 +173,7 @@ Output strictly as JSON:
         { role: "system", content: systemPrompt },
         { role: "user", content: combinedText },
       ],
+      response_format: { type: "json_object" },
     });
 
     const courseData = JSON.parse(youtubeData.choices[0].message.content);

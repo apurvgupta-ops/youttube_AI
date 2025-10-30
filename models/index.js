@@ -1,27 +1,19 @@
-import { sequelize } from '../config/database.js';
-import User, { UserModelDefinition } from './User.js';
+import defineUser from "./User.js";
+import definePrompt from "./Prompts.js";
 
-// Initialize User model
-User.init(UserModelDefinition.attributes, {
-    ...UserModelDefinition.options,
-    sequelize
-});
+import { sequelize } from "../config/database.js";
 
-// Import all models here
-const models = {
-    User
-};
+const User = defineUser(sequelize);
+const Prompt = definePrompt(sequelize);
 
-// Define associations
-Object.keys(models).forEach(modelName => {
-    if (models[modelName].associate) {
-        models[modelName].associate(models);
-    }
-});
+// other model imports...
 
-// Add sequelize instance and Sequelize constructor to models
+const models = { User, Prompt };
+
+// associations, etc.
+
 models.sequelize = sequelize;
 models.Sequelize = sequelize.Sequelize;
 
 export default models;
-export { User, sequelize };
+export { User, Prompt, sequelize };

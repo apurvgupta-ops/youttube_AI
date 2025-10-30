@@ -7,9 +7,6 @@ import {
   sendBadRequestResponse,
 } from "../utils/apiHelpers.js";
 
-/**
- * Request logging middleware
- */
 export const requestLogger = (req, res, next) => {
   const start = Date.now();
   const { method, url, ip } = req;
@@ -24,9 +21,6 @@ export const requestLogger = (req, res, next) => {
   next();
 };
 
-/**
- * Request validation middleware
- */
 export const validateRequest = (schema) => {
   return (req, res, next) => {
     const { error } = schema.validate(req.body);
@@ -38,9 +32,6 @@ export const validateRequest = (schema) => {
   };
 };
 
-/**
- * Authentication middleware
- */
 export const authenticate = async (req, res, next) => {
   try {
     const token = req.header("Authorization")?.replace("Bearer ", "");
@@ -59,9 +50,6 @@ export const authenticate = async (req, res, next) => {
   }
 };
 
-/**
- * Authorization middleware
- */
 export const authorize = (...roles) => {
   return (req, res, next) => {
     if (!req.user) {
@@ -82,9 +70,6 @@ export const authorize = (...roles) => {
   };
 };
 
-/**
- * Cache middleware
- */
 export const cache = (duration = 300) => {
   // 5 minutes default
   return (req, res, next) => {
