@@ -4,6 +4,8 @@ import morgan from "morgan";
 import helmet from "helmet";
 import cors from "cors";
 import rateLimit from "express-rate-limit";
+import http from "http";
+import https from "https";
 
 dotenv.config();
 
@@ -84,20 +86,52 @@ async function startServer() {
     initializeRoutes();
     initializeErrorHandling();
 
-    app.listen(port, host, () => {
-      logger.info(
-        `Server running on port ${port} in ${process.env.NODE_ENV} mode`
-      );
-      logger.info(
-        `API Documentation available at http://localhost:${port}/api/v1/docs`
-      );
-      logger.info(`Health check available at http://localhost:${port}/health`);
+    if (process.env.NODE_ENV === "production") {
+      // Load SSL certificate and key (adjust paths accordingly)
+      const sslKeyPath = "./apiSSL.key";
+      const sslCertPath = "./apiSSL.crt";
+      const sslCaPath = "./apiSSL.pem";
 
-      // Set up periodic cleanup of old files
-      setInterval(() => {
-        cleanupOldFiles(30); // Clean files older than 30 days
-      }, 24 * 60 * 60 * 1000); // Run daily
-    });
+      const sslOptions = {
+        key: fs.readFileSync(path.resolve(sslKeyPath)),
+        cert: fs.readFileSync(path.resolve(sslCertPath)),
+        ca: fs.readFileSync(path.resolve(sslCaPath)),
+      };
+
+      // Create HTTPS server
+      const httpsServer = https.createServer(sslOptions, app);
+      httpsServer.listen(443, host, () => {
+        logger.info(`HTTPS Server running on port 443 in production mode`);
+      });
+
+      // Optional: also create HTTP redirect to HTTPS
+      const httpServer = http.createServer((req, res) => {
+        res.writeHead(301, {
+          Location: `https://${req.headers.host}${req.url}`,
+        });
+        res.end();
+      });
+      httpServer.listen(80, host, () => {
+        logger.info(`HTTP Server redirecting to HTTPS on port 80`);
+      });
+    } else {
+      // Development / testing: just HTTP server on specified port
+      const httpServer = http.createServer(app);
+      httpServer.listen(port, host, () => {
+        logger.info(
+          `HTTP Server running on http://${host}:${port} in ${process.env.NODE_ENV} mode`
+        );
+        logger.info(
+          `API Documentation available at http://${host}:${port}/api/v1/docs`
+        );
+        logger.info(`Health check available at http://${host}:${port}/health`);
+      });
+    }
+
+    // Periodic cleanup logic
+    setInterval(() => {
+      cleanupOldFiles(30); // Clean files older than 30 days
+    }, 24 * 60 * 60 * 1000); // daily
   } catch (error) {
     logger.error("Failed to start server:", error);
     process.exit(1);
