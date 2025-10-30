@@ -102,7 +102,7 @@ async function startServer() {
 
       // Create HTTPS server
       const httpsServer = https.createServer(sslOptions, app);
-      httpsServer.listen(443, host, () => {
+      httpsServer.listen(port, host, () => {
         logger.info(`HTTPS Server running on port 443 in production mode`);
       });
 
@@ -113,7 +113,7 @@ async function startServer() {
         });
         res.end();
       });
-      httpServer.listen(80, host, () => {
+      httpServer.listen(port, host, () => {
         logger.info(`HTTP Server redirecting to HTTPS on port 80`);
       });
     } else {
