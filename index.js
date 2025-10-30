@@ -107,15 +107,15 @@ async function startServer() {
       });
 
       // Optional: also create HTTP redirect to HTTPS
-      const httpServer = http.createServer((req, res) => {
-        res.writeHead(301, {
-          Location: `https://${req.headers.host}${req.url}`,
-        });
-        res.end();
-      });
-      httpServer.listen(port, host, () => {
-        logger.info(`HTTP Server redirecting to HTTPS on port 80`);
-      });
+      // const httpServer = http.createServer((req, res) => {
+      //   res.writeHead(301, {
+      //     Location: `https://${req.headers.host}${req.url}`,
+      //   });
+      //   res.end();
+      // });
+      // httpServer.listen(port, host, () => {
+      //   logger.info(`HTTP Server redirecting to HTTPS on port 80`);
+      // });
     } else {
       // Development / testing: just HTTP server on specified port
       const httpServer = http.createServer(app);
