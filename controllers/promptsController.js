@@ -11,7 +11,7 @@ import logger from "../utils/logger.js";
 
 export const createPrompt = asyncHandler(async (req, res) => {
   try {
-    const user_id = req.user.id;
+    const user_id = 4;
     const { title, description, prompt } = req.body;
     if (!title || !prompt) {
       return sendBadRequestResponse(res, "Title and content are required");
@@ -33,8 +33,8 @@ export const createPrompt = asyncHandler(async (req, res) => {
 
 export const getPromptById = asyncHandler(async (req, res) => {
   try {
-    const user_id = req.user.id;
-    const prompts = await Prompt.findAll({ where: { user_id } });
+    // const user_id = 1;
+    const prompts = await Prompt.findAll({});
     return sendSuccessResponse(res, "Prompts retrieved successfully", prompts);
   } catch (error) {
     logger.error("Error retrieving prompts:", error);
@@ -44,7 +44,7 @@ export const getPromptById = asyncHandler(async (req, res) => {
 
 export const deletePrompt = asyncHandler(async (req, res) => {
   try {
-    const user_id = req.user.id;
+    const user_id = 4;
     const promptId = req.params.id;
     const prompt = await Prompt.findOne({
       where: { id: promptId, user_id },
@@ -62,7 +62,7 @@ export const deletePrompt = asyncHandler(async (req, res) => {
 
 export const updatePrompt = asyncHandler(async (req, res) => {
   try {
-    const user_id = req.user.id;
+    const user_id = 4;
     const promptId = req.params.id;
     const data = req.body;
     const prompt = await Prompt.findOne({
