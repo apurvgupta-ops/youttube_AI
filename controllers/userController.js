@@ -96,7 +96,7 @@ export const signupUser = asyncHandler(async (req, res) => {
 
 export const convertYoutubeUrlToCourse = asyncHandler(async (req, res) => {
   try {
-    const { youtubeUrl } = req.body;
+    const { youtubeUrl, title, presenter, transcript } = req.body;
     if (!youtubeUrl) {
       return sendBadRequestResponse(res, "YouTube URL is required");
     }
@@ -177,6 +177,14 @@ Output strictly as JSON:
     });
 
     const courseData = JSON.parse(youtubeData.choices[0].message.content);
+
+    if (title) {
+      courseData.title = title;
+    }
+    if (presenter) {
+      courseData.presenter = presenter;
+      courseData.description = `${courseData.description}\n\nPresented by: ${presenter}`;
+    }
 
     return sendCreatedResponse(
       res,
