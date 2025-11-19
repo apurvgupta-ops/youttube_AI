@@ -8,6 +8,7 @@ import userRoutes from "./user.js";
 import promptRoutes from "./prompt.js";
 import youtubeRoutes from "./youtube.js";
 import translationRoutes from "./translation.js";
+import uploadRoutes from "./upload.js";
 // import authRoutes from './auth.js';
 
 // Health routes
@@ -24,5 +25,6 @@ router.use("/api/v1/users", userRoutes);
 router.use("/api/v1/prompt", promptRoutes);
 router.use("/api/v1/youtube", youtubeRoutes);
 router.use("/api/v1/translation", translationRoutes);
+router.use("/api/v1/upload", uploadRoutes);
 
 export default router;

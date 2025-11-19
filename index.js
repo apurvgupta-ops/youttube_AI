@@ -68,6 +68,9 @@ function initializeMiddlewares() {
 }
 
 function initializeRoutes() {
+  // Serve static files from uploads directory
+  app.use("/uploads", express.static("uploads"));
+
   // Use centralized routes
   app.use("/", routes);
 
