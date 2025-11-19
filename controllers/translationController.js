@@ -44,7 +44,12 @@ export const translate = asyncHandler(async (req, res) => {
     const { data } = await axios.post(
       "https://translation.googleapis.com/language/translate/v2",
       null,
-      { params }
+      {
+        params,
+        headers: {
+          Referer: "https://askainsley.ai/",
+        },
+      }
     );
 
     const translation = data.data.translations[0];
@@ -87,6 +92,9 @@ export const detectLanguage = asyncHandler(async (req, res) => {
         params: {
           q: text,
           key,
+        },
+        headers: {
+          Referer: process.env.ALLOWED_REFERER || "http://localhost:5000",
         },
       }
     );

@@ -32,7 +32,12 @@ export const search = asyncHandler(async (req, res) => {
 
     const { data } = await axios.get(
       "https://www.googleapis.com/youtube/v3/search",
-      { params }
+      {
+        params,
+        headers: {
+          Referer: "https://askainsley.ai/",
+        },
+      }
     );
 
     return sendSuccessResponse(res, "YouTube search results", data.items);
