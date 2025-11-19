@@ -94,7 +94,7 @@ export const detectLanguage = asyncHandler(async (req, res) => {
           key,
         },
         headers: {
-          Referer: process.env.ALLOWED_REFERER || "http://localhost:5000",
+          Referer: process.env.ALLOWED_ORIGINS || "http://localhost:5000",
         },
       }
     );
