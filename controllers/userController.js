@@ -163,18 +163,48 @@ export const convertYoutubeUrlToCourse = asyncHandler(async (req, res) => {
     }
 
     // System prompt for GPT course creation
-    const systemPrompt = `
-You are an expert course content creator. Given the following text (from a YouTube transcript and related data),
-create a structured course with title, description, slug, 5 tags, and course_content in markdown format (~2000 words, 5 sections).
+    //     const systemPrompt = `
+    // You are an expert course content creator. Given the following text (from a YouTube transcript and related data),
+    // create a structured course with title, description, slug, 5 tags, and course_content in markdown format (~2000 words, 5 sections).
 
-Output strictly as JSON:
+    // Output strictly as JSON:
+    // {
+    //   "title": "string",
+    //   "slug": "string",
+    //   "description": "string",
+    //   "tags": ["string", "string", "string", "string", "string"],
+    //   "course_content": "string (markdown, ~1000 words or 5 paragraphs)"
+    // }
+    // `;
+
+    const systemPrompt = `
+You are an expert course content creator.
+
+Given the following text (from a YouTube transcript and related data), create a structured course with this exact layout:
+
+1. Introduction paragraph (1 short engaging paragraph).
+2. Learning objectives: exactly 3 bullet points, each starting with a strong action verb.
+3. Main content: up to 10 numbered sub-headings (1–10). 
+   - Each numbered heading has a title and 1–3 short paragraphs of explanatory text.
+4. Video section: a small section titled "Video" that briefly explains how the original video supports the learning.
+5. Practice activity: a section titled "Practice Activity" with a concrete activity or exercise for learners.
+6. Course summary: a short section recapping the key takeaways.
+7. Presenter acknowledgement: a short acknowledgement for the presenter (leave placeholders if no name is provided).
+
+Return JSON ONLY in the following format:
+
 {
   "title": "string",
   "slug": "string",
   "description": "string",
   "tags": ["string", "string", "string", "string", "string"],
-  "course_content": "string (markdown, ~1000 words or 5 paragraphs)"
+  "course_content": "string (markdown with the structure described above)"
 }
+
+Important:
+- "course_content" must be valid markdown.
+- Use headings and subheadings (##, ###, etc.) where appropriate.
+- Follow the structure strictly and in the same order.
 `;
 
     // Call OpenAI GPT-4 to generate the course from the transcript text
