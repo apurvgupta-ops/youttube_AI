@@ -113,7 +113,13 @@ export const search = asyncHandler(async (req, res) => {
 
     const { data: videosData } = await axios.get(
       "https://www.googleapis.com/youtube/v3/videos",
-      { params: videoParams }
+      {
+        params: videoParams,
+
+        headers: {
+          Referer: process.env.ALLOWED_ORIGINS || "http://localhost:5000",
+        },
+      }
     );
 
     const durationsMap = new Map();
