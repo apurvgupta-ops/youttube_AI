@@ -7,50 +7,6 @@ import {
   sendServerErrorResponse,
 } from "../utils/apiHelpers.js";
 
-// export const search = asyncHandler(async (req, res) => {
-//   const q = req.query.q;
-//   const maxResults = Math.min(parseInt(req.query.maxResults) || 10, 50);
-
-//   if (!q) {
-//     return sendBadRequestResponse(res, 'Query parameter "q" is required');
-//   }
-
-//   const key = process.env.YT_API_KEY;
-//   if (!key) {
-//     logger.error("YT_API_KEY is not set in environment");
-//     return sendServerErrorResponse(res, "YouTube API key not configured");
-//   }
-
-//   try {
-//     const params = {
-//       part: "snippet",
-//       q,
-//       type: "video",
-//       maxResults,
-//       key,
-//       videoCategoryId: "27",
-//     };
-
-//     const { data } = await axios.get(
-//       "https://www.googleapis.com/youtube/v3/search",
-//       {
-//         params,
-//         headers: {
-//           Referer: process.env.ALLOWED_ORIGINS || "http://localhost:5000",
-//         },
-//       }
-//     );
-
-//     return sendSuccessResponse(res, "YouTube search results", data.items);
-//   } catch (error) {
-//     logger.error(
-//       "YouTube search error:",
-//       error?.response?.data || error.message
-//     );
-//     return sendServerErrorResponse(res, "Failed to fetch YouTube results");
-//   }
-// });
-
 function parseIsoDurationToSeconds(iso) {
   // Simple ISO 8601 duration parser (PT#H#M#S)
   const match = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
@@ -103,10 +59,10 @@ export const search = asyncHandler(async (req, res) => {
       return sendSuccessResponse(res, "No videos found", []);
     }
 
-    // 2) Fetch durations with videos.list
+    // 2) Fetch durations and channel info with videos.list
     const videoIds = items.map((item) => item.id.videoId).join(",");
     const videoParams = {
-      part: "contentDetails",
+      part: "contentDetails,snippet",
       id: videoIds,
       key,
     };
@@ -122,21 +78,38 @@ export const search = asyncHandler(async (req, res) => {
       }
     );
 
-    const durationsMap = new Map();
+    const videoDetailsMap = new Map();
     (videosData.items || []).forEach((video) => {
       const id = video.id;
       const isoDuration = video.contentDetails?.duration;
       const seconds = isoDuration ? parseIsoDurationToSeconds(isoDuration) : 0;
-      durationsMap.set(id, seconds);
+      const channelTitle = video.snippet?.channelTitle || "Unknown";
+      videoDetailsMap.set(id, {
+        durationSeconds: seconds,
+        channelTitle,
+        duration: isoDuration,
+      });
     });
 
-    // 3) Filter by <= 60 minutes (3600 seconds)
+    // 3) Filter by <= 60 minutes (3600 seconds) and add presenter + duration
     const MAX_SECONDS = 60 * 60;
-    const filteredItems = items.filter((item) => {
-      const vid = item.id.videoId;
-      const durationSec = durationsMap.get(vid) ?? 0;
-      return durationSec > 0 && durationSec <= MAX_SECONDS;
-    });
+    const filteredItems = items
+      .filter((item) => {
+        const vid = item.id.videoId;
+        const details = videoDetailsMap.get(vid);
+        const durationSec = details?.durationSeconds ?? 0;
+        return durationSec > 0 && durationSec <= MAX_SECONDS;
+      })
+      .map((item) => {
+        const vid = item.id.videoId;
+        const details = videoDetailsMap.get(vid);
+        return {
+          ...item,
+          presenterName: details?.channelTitle || "Unknown",
+          duration: details?.duration || "PT0S",
+          durationSeconds: details?.durationSeconds || 0,
+        };
+      });
 
     return sendSuccessResponse(
       res,
